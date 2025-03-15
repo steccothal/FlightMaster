@@ -50,14 +50,55 @@ The `JPAUtil` class provides a centralized way to create and manage `EntityManag
 - Ensures that all database operations use a properly managed entity manager.
 - Includes a `close()` method to properly shut down Hibernate when the application stops.
 
-## First Test: Checking Database Connection
+## 3. Entity Definition and Relationships
 
-To verify that Hibernate is correctly set up, a test class was created.
+**Location:** `src/main/java/com/flight/manager/model/entities/\*
 
-**Location:** `src/main/java/com/flight/manager/main/TestConnection.java`
+### 3.1 Entity Overview
 
-This test checks if the connection to H2 is successful. Running it should output:
+The main entities in the system are:
 
+- **Person** (Base class, abstract)
+- **Passenger** (Extends `Person`)
+- **Pilot** (Extends `Person`)
+- **CrewMember** (Extends `Person`)
+- **Passport** (Represents the identity document of a `Person`)
+- **Flight** (Represents an airline flight)
+- **Airplane** (Represents an aircraft)
+
+### 3.2 Relationships Between Entities
+
+| Entity     | Relationship  | Entity     | Type                                                  |
+| ---------- | ------------- | ---------- | ----------------------------------------------------- |
+| `Person`   | `@OneToOne`   | `Passport` | One-to-One (each person has one passport)             |
+| `Person`   | `@ManyToMany` | `Flight`   | Many-to-Many (each person has many flights)           |
+| `Flight`   | `@ManyToMany` | `Person`   | Many-to-Many (each person has many flights)           |
+| `Flight`   | `@ManyToOne`  | `Airplane` | Many-to-One (each flight is operated by one airplane) |
+| `Airplane` | `@OneToMany`  | `Flight`   | One-to-Many (an airplane has multiple flights)        |
+
+### 3.3 Inheritance in Hibernate
+
+#### **Person as a Superclass**
+
+All individuals in the system inherit from `Person`, which acts as a **superclass**. This entity is marked as:
+
+```java
+@Inheritance(strategy = InheritanceType.JOINED)
 ```
-Connection to H2 successful!
-```
+
+With this strategy:
+
+- The `person` table stores general attributes (`id`, `firstName`, `lastName`, `email`).
+- Each subclass (`Passenger`, `Pilot`, `CrewMember`) has its own table with a **foreign key linking to `person.id`**.
+
+### 3.4 Test Suite for Entity Persistence and Validation
+
+A JUnit 5 test suite has been added to verify data persistence and the correctness of entity modeling.
+
+#### Purpose:
+
+- Ensure that entities are correctly persisted in the database.
+- Validate relationships between entities (`OneToOne`, `ManyToMany`, etc.).
+- Confirm data integrity and proper cascading behavior.
+
+The test suite initializes the database, performs validation checks, and ensures correct cleanup after execution, allowing multiple test runs without data duplication in case a file based strategy has been chosen for H2.
