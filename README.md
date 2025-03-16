@@ -4,9 +4,21 @@ FlightMaster is a Java project using Hibernate and H2 Database, developed with M
 The goal is to manage a relational database for flight tracking using Object-Relational Mapping (ORM) techniques.  
 This project is structured for educational purposes, demonstrating step-by-step how to configure Hibernate and interact with a relational database.
 
-## Hibernate and Database Configuration
+## Versioning and Tags
 
-### 1. Persistence Configuration (`persistence.xml`)
+To facilitate tracking of development progress and allow step-by-step analysis, each major section of the project corresponds to a **Git tag** in the repository. These tags allow easy access to different stages of development:
+
+- **`01-Persistence-setup`** → Basic Hibernate and database configuration.
+- **`02-Entities-creation`** → Definition of entities and relationships.
+- **`03-Repositories`** → Implementation of repositories and database queries.
+
+By checking out a specific tag, it is possible to obtain the exact version of the project at that stage, making it easier to understand the incremental development process.
+
+## 1. Hibernate and Database Configuration
+
+Git tag: **`01-Persistence-setup`**
+
+### 1.1 Persistence Configuration (`persistence.xml`)
 
 **Location:** `src/main/resources/META-INF/persistence.xml`
 
@@ -37,7 +49,7 @@ If instead, an **in-memory** database is required (which does not persist data a
 - Enables automatic schema updates (`hbm2ddl.auto = update`), allowing Hibernate to create and modify tables.
 - Enables SQL logging (`show_sql = true`), displaying queries executed by Hibernate in the console.
 
-### 2. Entity Manager Factory (`JPAUtil.java`)
+### 1.2 Entity Manager Factory (`JPAUtil.java`)
 
 **Location:** `src/main/java/com/flight/manager/config/JPAUtil.java`
 
@@ -50,11 +62,13 @@ The `JPAUtil` class provides a centralized way to create and manage `EntityManag
 - Ensures that all database operations use a properly managed entity manager.
 - Includes a `close()` method to properly shut down Hibernate when the application stops.
 
-## 3. Entity Definition and Relationships
+## 2. Entity Definition and Relationships
 
-**Location:** `src/main/java/com/flight/manager/model/entities/\*
+Git tag: **`02-Entities-creation`**
 
-### 3.1 Entity Overview
+### 2.1 Entity Overview
+
+**Location:** `src/main/java/com/flight/manager/model/entities/\*`
 
 The main entities in the system are:
 
@@ -66,7 +80,7 @@ The main entities in the system are:
 - **Flight** (Represents an airline flight)
 - **Airplane** (Represents an aircraft)
 
-### 3.2 Relationships Between Entities
+### 2.2 Relationships Between Entities
 
 | Entity     | Relationship  | Entity     | Type                                                  |
 | ---------- | ------------- | ---------- | ----------------------------------------------------- |
@@ -76,7 +90,7 @@ The main entities in the system are:
 | `Flight`   | `@ManyToOne`  | `Airplane` | Many-to-One (each flight is operated by one airplane) |
 | `Airplane` | `@OneToMany`  | `Flight`   | One-to-Many (an airplane has multiple flights)        |
 
-### 3.3 Inheritance in Hibernate
+### 2.3 Inheritance in Hibernate
 
 #### **Person as a Superclass**
 
@@ -91,7 +105,7 @@ With this strategy:
 - The `person` table stores general attributes (`id`, `firstName`, `lastName`, `email`).
 - Each subclass (`Passenger`, `Pilot`, `CrewMember`) has its own table with a **foreign key linking to `person.id`**.
 
-### 3.4 Test Suite for Entity Persistence and Validation
+### 2.4 Test Suite for Entity Persistence and Validation
 
 A JUnit 5 test suite has been added to verify data persistence and the correctness of entity modeling.
 
@@ -102,3 +116,55 @@ A JUnit 5 test suite has been added to verify data persistence and the correctne
 - Confirm data integrity and proper cascading behavior.
 
 The test suite initializes the database, performs validation checks, and ensures correct cleanup after execution, allowing multiple test runs without data duplication in case a file based strategy has been chosen for H2.
+
+## 3. Repositories
+
+Git tag: **`03-Repositories`**
+
+### 3.1 Implementation of Generic Repositories
+
+**Location:** `src/main/java/com/flight/manager/model/repositories/\*`
+
+A **generic repository class** has been created to **standardize CRUD operations** for all entities. This class provides basic methods for:
+
+- Creating new entities
+- Reading entities by ID
+- Updating existing entities
+- Deleting entities
+- Listing all entities of a given type
+
+This abstraction allows for **code reuse** and ensures **consistency** across all repositories.
+
+The database initializer has been modified. Instead of directly interacting with the `EntityManager`, it now utilizes **generic repositories** to populate the database.
+
+### 3.2 Specific Repository Example: `FlightRepository`
+
+A concrete implementation, `FlightRepository`, has been added to demonstrate **custom query operations** beyond the basic CRUD functionality. This repository includes examples of:
+
+- **JPQL queries**
+- **Named queries**
+- **Native SQL queries**
+- **Criteria API queries**
+
+### 3.3 Introduction of a Dedicated Persistence Unit for Tests
+
+A separate persistence unit has been added in `persistence.xml` to ensure test isolation from the main database. This unit uses an **in-memory H2 database**, which is created and destroyed automatically during each test suite execution. The main persistence unit remains file-based for real-world application use.
+
+### 3.4 Handling Multiple Persistence Units in `JPAUtil`
+
+The `JPAUtil` class has been updated to **dynamically select** the appropriate persistence unit based on the execution context. It now provides the correct `EntityManager` instance depending on whether the system is running in **test mode** or normal mode.
+
+### 3.5 Unit Testing for Repositories
+
+Test suites have been implemented for both the **generic repository** and the **`FlightRepository`** to verify that the persistence layer operates correctly. These tests check the proper execution of CRUD operations and the different query types.
+
+To ensure that the test persistence unit is correctly initialized and properly closed, a **`TestWatcher`** class has been implemented. This class is extended by all test classes and:
+
+- **Initializes the test persistence unit before executing each test suite.**
+- **Closes the `EntityManagerFactory` after each test suite has completed execution.**
+
+This approach ensures that the **test database is always fresh** for each test suite and avoids potential issues with pre-existing data.
+
+---
+
+With these enhancements, the project now supports a **clean separation between test and production environments**, an **extensible repository system**, and **robust testing for database interactions**.

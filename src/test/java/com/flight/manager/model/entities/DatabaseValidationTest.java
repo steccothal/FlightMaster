@@ -7,14 +7,16 @@ import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.flight.manager.config.JPAUtil;
 import com.flight.manager.utils.TestDatabasePopulator;
+import com.flight.manager.utils.TestWatcher;
 
+@ExtendWith(TestWatcher.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DatabaseValidationTest {
 
@@ -31,7 +33,7 @@ public class DatabaseValidationTest {
 
         em.close();
 
-        assertEquals(2, airplanes.size(), "There should be exactly 2 airplanes in the database");
+        assertEquals(3, airplanes.size(), "There should be exactly 2 airplanes in the database");
 
         boolean hasBoeing737 = airplanes.stream().anyMatch(a -> a.getModel().equals("Boeing 737"));
         boolean hasAirbusA320 = airplanes.stream().anyMatch(a -> a.getModel().equals("Airbus A320"));
@@ -48,7 +50,7 @@ public class DatabaseValidationTest {
 
         em.close();
         
-        assertEquals(2, flights.size(), "There should be exactly 2 flights in the database");
+        assertEquals(3, flights.size(), "There should be exactly 3 flights in the database");
 
         boolean hasFL1234 = flights.stream().anyMatch(f -> f.getFlightCode().equals("FL1234"));
         boolean hasFL5678 = flights.stream().anyMatch(f -> f.getFlightCode().equals("FL5678"));
@@ -119,7 +121,11 @@ public class DatabaseValidationTest {
         List<Flight> flights = query.getResultList();
 
         for (Flight flight : flights) {
-            assertEquals(2, flight.getPassengers().size(), "Each flight should have exactly 2 passengers");
+            if (TestDatabasePopulator.THREE_PASSENGERS_FLIGHT_CODE.equals(flight.getFlightCode())) {
+                assertEquals(3, flight.getPassengers().size(), "This flight should have exactly 3 passengers");
+            } else {
+                assertEquals(2, flight.getPassengers().size(), "This flight should have exactly 2 passengers");
+            }
         }
 
         em.close();
@@ -162,21 +168,5 @@ public class DatabaseValidationTest {
         for (CrewMember crew : crewMembers) {
             assertNotNull(crew.getPassport(), "Each crew member must have a passport");
         }
-    }
-
-    @AfterAll
-    void tearDown() {
-        EntityManager em = JPAUtil.getEntityManager();
-
-        em.getTransaction().begin();
-        em.createQuery("DELETE FROM Flight").executeUpdate();
-        em.createQuery("DELETE FROM Passport").executeUpdate();
-        em.createQuery("DELETE FROM Passenger").executeUpdate();
-        em.createQuery("DELETE FROM Pilot").executeUpdate();
-        em.createQuery("DELETE FROM CrewMember").executeUpdate();
-        em.createQuery("DELETE FROM Airplane").executeUpdate();
-        em.getTransaction().commit();
-
-        em.close();
     }
 }

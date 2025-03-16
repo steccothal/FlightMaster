@@ -11,19 +11,25 @@ import com.flight.manager.model.entities.*;
 
 public class TestDatabasePopulator {
 
+    public static final String THREE_PASSENGERS_FLIGHT_CODE = "FL5678";
+
     public static void populateDatabase() {
         EntityManager em = JPAUtil.getEntityManager();
         em.getTransaction().begin();
 
         Airplane airplane1 = createAirplane("Boeing 737", "Airways", 180, AirplaneStatus.IN_SERVICE);
         Airplane airplane2 = createAirplane("Airbus A320", "Sky Airlines", 160, AirplaneStatus.IN_SERVICE);
+        Airplane airplane3 = createAirplane("Pipistrel Virus SW 121", "Sky Airlines", 2, AirplaneStatus.IN_SERVICE);
         em.persist(airplane1);
         em.persist(airplane2);
+        em.persist(airplane3);
 
-        Flight flight1 = createFlight("FL1234", LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusHours(3), airplane1);
-        Flight flight2 = createFlight("FL5678", LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(2).plusHours(4), airplane2);
+        Flight flight1 = createFlight("FL1234", LocalDateTime.now().minusHours(1), LocalDateTime.now().plusHours(3), airplane1);
+        Flight flight2 = createFlight(THREE_PASSENGERS_FLIGHT_CODE, LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(2).plusHours(4), airplane2);
+        Flight flight3 = createFlight("FL9678", LocalDateTime.now().plusDays(9), LocalDateTime.now().plusDays(9).plusHours(4), airplane3);
         em.persist(flight1);
         em.persist(flight2);
+        em.persist(flight3);
 
         Passenger passenger1 = createPassengerWithPassport("John", "Doe", "johndoe@example.com", 1977, Calendar.MAY, 23, "A1234567", "USA");
         Passenger passenger2 = createPassengerWithPassport("Alice", "Smith", "alice.smith@example.com", 1985, Calendar.APRIL, 10, "B2345678", "UK");
@@ -37,8 +43,11 @@ public class TestDatabasePopulator {
 
         flight1.getPassengers().add(passenger1);
         flight1.getPassengers().add(passenger2);
+        flight2.getPassengers().add(passenger1);
         flight2.getPassengers().add(passenger3);
         flight2.getPassengers().add(passenger4);
+        flight3.getPassengers().add(passenger1);
+        flight3.getPassengers().add(passenger4);
 
         em.persist(createPilotWithPassport("James", "Wilson", "james.wilson@example.com", 1975, Calendar.FEBRUARY, 15, "E5678901", "USA", "PL12345", 20));
         em.persist(createPilotWithPassport("Laura", "Adams", "laura.adams@example.com", 1980, Calendar.MARCH, 25, "F6789012", "UK", "PL67890", 18));

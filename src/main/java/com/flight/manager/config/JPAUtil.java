@@ -6,13 +6,30 @@ import jakarta.persistence.Persistence;
 
 public class JPAUtil {
     
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("flightPU");
+    private static final String TEST_PU_NAME =  "flightTestPU";
+    private static final String PU_NAME =  "flightPU";
+
+    private static EntityManagerFactory emf;
+    private static String currentPUName = JPAUtil.PU_NAME;
+
+    public static void setTestMode() {
+        currentPUName = JPAUtil.TEST_PU_NAME;
+    }
+
+    private static EntityManagerFactory getCurrentFactory() {
+        if (emf == null || !emf.isOpen()) {
+            emf = Persistence.createEntityManagerFactory(currentPUName);
+        }
+        return emf;
+    }
 
     public static EntityManager getEntityManager() {
-        return emf.createEntityManager();
+        return getCurrentFactory().createEntityManager();
     }
 
     public static void close() {
-        emf.close();
+        if (emf.isOpen()) {
+            emf.close();
+        }
     }
 }

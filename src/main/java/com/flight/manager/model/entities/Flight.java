@@ -8,7 +8,21 @@ import java.util.Set;
 
 @Entity
 @Table(name = "flights", indexes = {@Index(name = "idx_flight_code", columnList = "flightCode")})
+@NamedQueries({
+    @NamedQuery(
+        name = Flight.FIND_FLIGHTS_WITH_EMPTY_SEATS,
+        query = "SELECT f FROM Flight f WHERE SIZE(f.passengers) < f.airplane.capacity"
+    ),
+    @NamedQuery(
+        name = Flight.FIND_CURRENTLY_FLYING, 
+        query = "SELECT f FROM Flight f WHERE f.departureTime <= CURRENT_TIMESTAMP AND f.arrivalTime >= CURRENT_TIMESTAMP"
+    )
+})
+
 public class Flight {
+
+    public static final String FIND_FLIGHTS_WITH_EMPTY_SEATS = "Flight.findEmptySeats";
+    public static final String FIND_CURRENTLY_FLYING = "Flight.findCurrentlyFlying";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
